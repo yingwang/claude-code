@@ -1,0 +1,785 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Claude Code Source Analysis / 源码解析</title>
+<link rel="stylesheet" href="style.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔍</text></svg>">
+</head>
+<body>
+
+<!-- HAMBURGER -->
+<button class="hamburger" onclick="document.querySelector('.sidebar').classList.toggle('open')" aria-label="Menu">
+  <span></span><span></span><span></span>
+</button>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-header">
+    <h1>Claude Code</h1>
+    <div class="subtitle">Source Analysis / 源码解析</div>
+  </div>
+  <nav class="sidebar-nav">
+    <a href="#arch" data-section="arch">
+      <span class="nav-icon">📂</span>
+      <div><span class="nav-label">Architecture</span><div class="nav-zh">架构概览</div></div>
+    </a>
+    <a href="#prompt" data-section="prompt">
+      <span class="nav-icon">📝</span>
+      <div><span class="nav-label">System Prompt</span><div class="nav-zh">系统提示词</div></div>
+    </a>
+    <a href="#claudemd" data-section="claudemd">
+      <span class="nav-icon">📄</span>
+      <div><span class="nav-label">CLAUDE.md Guide</span><div class="nav-zh">CLAUDE.md 指南</div></div>
+    </a>
+    <a href="#hooks" data-section="hooks">
+      <span class="nav-icon">🪝</span>
+      <div><span class="nav-label">Hook System</span><div class="nav-zh">Hook 系统</div></div>
+    </a>
+    <a href="#mcp" data-section="mcp">
+      <span class="nav-icon">🔌</span>
+      <div><span class="nav-label">MCP Servers</span><div class="nav-zh">MCP 集成</div></div>
+    </a>
+    <a href="#agents" data-section="agents">
+      <span class="nav-icon">🤖</span>
+      <div><span class="nav-label">Agent System</span><div class="nav-zh">Agent 系统</div></div>
+    </a>
+    <a href="#hidden" data-section="hidden">
+      <span class="nav-icon">🔮</span>
+      <div><span class="nav-label">Hidden Features</span><div class="nav-zh">隐藏功能</div></div>
+    </a>
+    <a href="#tools" data-section="tools">
+      <span class="nav-icon">🛠</span>
+      <div><span class="nav-label">Tool Registry</span><div class="nav-zh">工具注册表</div></div>
+    </a>
+    <a href="#security" data-section="security">
+      <span class="nav-icon">🔒</span>
+      <div><span class="nav-label">Security</span><div class="nav-zh">安全与权限</div></div>
+    </a>
+  </nav>
+  <div class="sidebar-footer">
+    <a href="https://github.com/yingwang/claude-code">yingwang/claude-code</a><br>
+    Based on leaked source / 基于泄露源码
+  </div>
+</aside>
+
+<!-- MAIN CONTENT -->
+<div class="main">
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-badge">&#9679; SOURCE CODE ANALYSIS</div>
+  <h2>Claude Code Internals</h2>
+  <div class="hero-zh">Claude Code 内部架构全解析</div>
+  <p>A comprehensive bilingual guide to Claude Code's architecture, extracted from the leaked source code. 1,906 files, 40+ tools, multi-agent orchestration, and hidden features — all documented here.</p>
+  <p style="color:var(--text-muted);margin-top:8px;font-size:.82rem">基于泄露源码的全面双语指南。1,906 个文件、40+ 工具、多 Agent 编排系统和隐藏功能——全部记录在此。</p>
+
+  <div class="stats" style="margin-top:32px">
+    <div class="stat"><span class="stat-value">1,906</span><span class="stat-label">Files / 文件</span></div>
+    <div class="stat"><span class="stat-value">40+</span><span class="stat-label">Tools / 工具</span></div>
+    <div class="stat"><span class="stat-value">26</span><span class="stat-label">Hook Events</span></div>
+    <div class="stat"><span class="stat-value">785KB</span><span class="stat-label">main.tsx</span></div>
+  </div>
+</div>
+
+<div class="content">
+
+<!-- ═══════════ 1. ARCHITECTURE ═══════════ -->
+<div class="section" id="arch">
+  <div class="section-header">
+    <span class="section-num">01</span>
+    <span class="section-title">Architecture Overview</span>
+    <span class="section-title-zh">架构概览</span>
+  </div>
+
+  <p>Claude Code is a 785KB <code>main.tsx</code> entry point with a custom React terminal renderer, organized into 36 top-level directories.</p>
+  <p class="bilingual">Claude Code 是一个 785KB 的 <code>main.tsx</code> 入口，自带定制 React 终端渲染器，组织为 36 个顶层目录。</p>
+
+  <h3>High-Level Data Flow / 高层数据流</h3>
+  <div class="flow">
+    <div class="flow-box">User Input<br><small>用户输入</small></div>
+    <span class="flow-arrow">→</span>
+    <div class="flow-box">entrypoints/<br><small>入口</small></div>
+    <span class="flow-arrow">→</span>
+    <div class="flow-box">query.ts<br><small>API 调用</small></div>
+    <span class="flow-arrow">→</span>
+    <div class="flow-box">tools/<br><small>工具执行</small></div>
+    <span class="flow-arrow">→</span>
+    <div class="flow-box">Output<br><small>输出</small></div>
+  </div>
+
+  <h3>Directory Map / 目录地图</h3>
+  <p class="bilingual">Click any folder to expand details. / 点击文件夹展开详情。</p>
+
+  <div class="tree" id="dir-tree"></div>
+</div>
+
+<div class="glow-line"></div>
+
+<!-- ═══════════ 2. SYSTEM PROMPT ═══════════ -->
+<div class="section" id="prompt">
+  <div class="section-header">
+    <span class="section-num">02</span>
+    <span class="section-title">System Prompt Architecture</span>
+    <span class="section-title-zh">系统提示词架构</span>
+  </div>
+
+  <p>The system prompt isn't a single string — it's built from <strong>modular, cached sections</strong> composed at runtime in <code>constants/</code>.</p>
+  <p class="bilingual">系统提示词不是单一字符串——它由 <code>constants/</code> 中的模块化、可缓存段落在运行时组装。</p>
+
+  <h3>Two-Layer Architecture / 两层架构</h3>
+  <div class="card-grid">
+    <div class="card">
+      <div class="card-header"><span class="card-icon">🔒</span><div><span class="card-title">Static Layer</span><br><span class="card-title-zh">静态层（全局缓存）</span></div></div>
+      <div class="card-body">Identity, core rules, tool instructions, security policies. Cached globally across organizations.<br><br>身份、核心规则、工具说明、安全策略。跨组织全局缓存。</div>
+    </div>
+    <div class="card">
+      <div class="card-header"><span class="card-icon">🔄</span><div><span class="card-title">Dynamic Layer</span><br><span class="card-title-zh">动态层（每次会话变）</span></div></div>
+      <div class="card-body">CLAUDE.md content, git state, MCP instructions, language preferences, memory files. Cached per org.<br><br>CLAUDE.md 内容、git 状态、MCP 指令、语言偏好、记忆文件。按组织缓存。</div>
+    </div>
+  </div>
+
+  <p style="margin-top:16px">Separated by <code>SYSTEM_PROMPT_DYNAMIC_BOUNDARY</code> marker. There's also a <code>DANGEROUS_uncachedSystemPromptSection()</code> for volatile content that explicitly breaks cache.</p>
+  <p class="bilingual">通过 <code>SYSTEM_PROMPT_DYNAMIC_BOUNDARY</code> 标记分隔。还有 <code>DANGEROUS_uncachedSystemPromptSection()</code> 用于明确打破缓存的易变内容。</p>
+
+  <h3>Context Injected Per Turn / 每轮注入的上下文</h3>
+  <p>Before each API call, a <code>&lt;system-reminder&gt;</code> meta message is prepended containing:</p>
+  <pre data-lang="xml"><span class="kw">&lt;system-reminder&gt;</span>
+  <span class="cm"># gitStatus</span>
+  <span class="str">[branch, recent commits, status — max 2000 chars]</span>
+
+  <span class="cm"># claudeMd</span>
+  <span class="str">[CLAUDE.md content from directory walk]</span>
+
+  <span class="cm"># currentDate</span>
+  <span class="str">Today's date is YYYY-MM-DD.</span>
+<span class="kw">&lt;/system-reminder&gt;</span></pre>
+
+  <h3>Hardcoded Limits / 硬编码限制</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Limit / 限制</th><th>Value / 值</th></tr></thead>
+      <tbody>
+        <tr><td>Context window</td><td><code>200K</code> tokens (1M with Opus/Sonnet 4.6)</td></tr>
+        <tr><td>Opus output</td><td><code>64K</code> default, <code>128K</code> max</td></tr>
+        <tr><td>Sonnet output</td><td><code>32K</code> default, <code>128K</code> max</td></tr>
+        <tr><td>Single tool result / 单工具返回</td><td><code>50,000</code> chars</td></tr>
+        <tr><td>All tools per message / 单消息所有工具</td><td><code>200,000</code> chars</td></tr>
+        <tr><td>Git status / Git 状态</td><td><code>2,000</code> chars (truncated)</td></tr>
+        <tr><td>MEMORY.md</td><td><code>200</code> lines or <code>25KB</code></td></tr>
+        <tr><td>Images / 图片</td><td><code>5MB</code> base64, 2000&times;2000px</td></tr>
+        <tr><td>PDF</td><td><code>100</code> pages, 20 per read</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="glow-line"></div>
+
+<!-- ═══════════ 3. CLAUDE.MD ═══════════ -->
+<div class="section" id="claudemd">
+  <div class="section-header">
+    <span class="section-num">03</span>
+    <span class="section-title">Writing Effective CLAUDE.md</span>
+    <span class="section-title-zh">CLAUDE.md 写法指南</span>
+  </div>
+
+  <p>CLAUDE.md files are the <strong>highest-priority</strong> way to instruct Claude Code. They're loaded into the system prompt's dynamic layer every turn.</p>
+  <p class="bilingual">CLAUDE.md 是指导 Claude Code 的<strong>最高优先级</strong>方式。每轮对话都会加载到 system prompt 的动态层。</p>
+
+  <h3>Loading Priority / 加载优先级</h3>
+  <div class="priority-bar">
+    <div class="priority-seg" style="background:var(--accent-dim);border:1px solid rgba(249,115,22,.2)"><span class="label" style="color:var(--accent)">1. Managed</span><span class="sublabel">/etc/claude-code/CLAUDE.md</span></div>
+    <div class="priority-seg" style="background:var(--blue-dim);border:1px solid rgba(59,130,246,.2)"><span class="label" style="color:var(--blue)">2. User</span><span class="sublabel">~/.claude/CLAUDE.md</span></div>
+    <div class="priority-seg" style="background:var(--green-dim);border:1px solid rgba(34,197,94,.2)"><span class="label" style="color:var(--green)">3. Project</span><span class="sublabel">CLAUDE.md, .claude/rules/*.md</span></div>
+    <div class="priority-seg" style="background:var(--purple-dim);border:1px solid rgba(168,85,247,.2)"><span class="label" style="color:var(--purple)">4. Local</span><span class="sublabel">CLAUDE.local.md</span></div>
+  </div>
+
+  <h3>Best Practices / 最佳实践</h3>
+  <div class="card-grid">
+    <div class="card">
+      <div class="card-header"><span class="card-icon">✅</span><span class="card-title">DO</span></div>
+      <div class="card-body">
+        &bull; Put recurring rules in CLAUDE.md, not chat / 反复用的规则放 CLAUDE.md<br>
+        &bull; Reference code as <code>path:line_number</code><br>
+        &bull; Break large tasks into subtasks / 大任务拆子任务<br>
+        &bull; Specify "research only" vs "make changes" / 明确只研究还是改代码<br>
+        &bull; Use <code>.claude/rules/*.md</code> for topic-specific rules / 按主题拆规则文件
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header"><span class="card-icon">❌</span><span class="card-title">DON'T</span></div>
+      <div class="card-body">
+        &bull; Rely on code comments for instructions / 别靠代码注释指导<br>
+        &bull; Ask for time estimates / 别要时间估算<br>
+        &bull; Over-engineer or add unnecessary abstractions / 别过度工程化<br>
+        &bull; Use relative paths in memory files / 记忆文件别用相对路径<br>
+        &bull; Repeat instructions in chat that are already in CLAUDE.md / 别在聊天里重复
+      </div>
+    </div>
+  </div>
+
+  <h3>Example CLAUDE.md / 示例</h3>
+  <pre data-lang="markdown"><span class="cm"># Project Rules</span>
+
+<span class="cm">## Code Style</span>
+<span class="str">- Use TypeScript strict mode</span>
+<span class="str">- Prefer functional components over class components</span>
+<span class="str">- Always run `npm test` after modifying src/ files</span>
+
+<span class="cm">## Architecture</span>
+<span class="str">- API routes are in `src/routes/` — follow existing patterns</span>
+<span class="str">- Database queries go through `src/db/` — never raw SQL in routes</span>
+<span class="str">- Use Zod for all input validation</span>
+
+<span class="cm">## Don't</span>
+<span class="str">- Don't modify `src/legacy/` — it's being deprecated</span>
+<span class="str">- Don't add new dependencies without asking first</span></pre>
+</div>
+
+<div class="glow-line"></div>
+
+<!-- ═══════════ 4. HOOKS ═══════════ -->
+<div class="section" id="hooks">
+  <div class="section-header">
+    <span class="section-num">04</span>
+    <span class="section-title">Hook System</span>
+    <span class="section-title-zh">Hook 系统</span>
+  </div>
+
+  <p>Claude Code supports <strong>26 hook events</strong> and <strong>5 hook types</strong>, configured in <code>settings.json</code>.</p>
+  <p class="bilingual">Claude Code 支持 <strong>26 个 hook 事件</strong>和 <strong>5 种 hook 类型</strong>，在 <code>settings.json</code> 中配置。</p>
+
+  <h3>Hook Types / Hook 类型</h3>
+  <div class="card-grid">
+    <div class="card"><div class="card-header"><span class="tag tag-orange">command</span><span class="card-title" style="margin-left:8px">Shell Command</span></div><div class="card-body">Run bash/PowerShell. Input via <code>$ARGUMENTS</code> or stdin. Exit code 2 = block.<br>执行 shell 命令。通过 <code>$ARGUMENTS</code> 传入参数。exit 2 = 阻止。</div></div>
+    <div class="card"><div class="card-header"><span class="tag tag-purple">prompt</span><span class="card-title" style="margin-left:8px">LLM Evaluation</span></div><div class="card-body">Small model (Haiku) evaluates condition. Returns <code>{"ok": true/false}</code>.<br>小模型判断条件，返回 ok/not ok。</div></div>
+    <div class="card"><div class="card-header"><span class="tag tag-blue">agent</span><span class="card-title" style="margin-left:8px">Multi-turn Agent</span></div><div class="card-body">Full agent with tool access for verification tasks.<br>有完整工具访问的多轮 agent，用于验证。</div></div>
+    <div class="card"><div class="card-header"><span class="tag tag-green">http</span><span class="card-title" style="margin-left:8px">HTTP Webhook</span></div><div class="card-body">POST hook input to external endpoint. SSRF protection built-in.<br>POST 到外部端点，内置 SSRF 防护。</div></div>
+    <div class="card"><div class="card-header"><span class="tag tag-cyan">function</span><span class="card-title" style="margin-left:8px">Runtime Callback</span></div><div class="card-body">In-memory TypeScript callback. Not persisted. Session-scoped.<br>运行时内存回调，不存盘，会话级别。</div></div>
+  </div>
+
+  <h3>Exit Code Semantics / Exit Code 语义</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Exit Code</th><th>PreToolUse</th><th>Other Events / 其他事件</th></tr></thead>
+      <tbody>
+        <tr><td><span class="tag tag-green">0</span></td><td>Allow execution / 允许执行</td><td>Continue normally / 正常继续</td></tr>
+        <tr><td><span class="tag tag-red">2</span></td><td><strong>Block execution</strong>, stderr → model / 阻止执行</td><td>stderr shown to model / 显示给模型</td></tr>
+        <tr><td><span class="tag tag-blue">other</span></td><td>Non-blocking error / 非阻塞错误</td><td>Continue / 继续</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>All 26 Events / 全部 26 个事件</h3>
+  <div class="collapse">
+    <button class="collapse-trigger" onclick="this.classList.toggle('open')"><span class="collapse-arrow">▶</span> Click to expand full event list / 点击展开完整事件列表</button>
+    <div class="collapse-body">
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Event</th><th>Matcher</th><th>When / 触发时机</th></tr></thead>
+          <tbody>
+            <tr><td><code>PreToolUse</code></td><td>tool_name</td><td>Before tool execution / 工具执行前</td></tr>
+            <tr><td><code>PostToolUse</code></td><td>tool_name</td><td>After tool execution / 工具执行后</td></tr>
+            <tr><td><code>PostToolUseFailure</code></td><td>tool_name</td><td>Tool call fails / 工具调用失败</td></tr>
+            <tr><td><code>UserPromptSubmit</code></td><td>—</td><td>User submits prompt / 用户提交 prompt</td></tr>
+            <tr><td><code>SessionStart</code></td><td>source</td><td>Session begins / 会话开始</td></tr>
+            <tr><td><code>SessionEnd</code></td><td>reason</td><td>Session ends / 会话结束</td></tr>
+            <tr><td><code>Stop</code></td><td>—</td><td>Before reply finishes / 回复前</td></tr>
+            <tr><td><code>StopFailure</code></td><td>error</td><td>API error ends turn / API 错误</td></tr>
+            <tr><td><code>SubagentStart</code></td><td>—</td><td>Agent spawned / Agent 生成</td></tr>
+            <tr><td><code>SubagentStop</code></td><td>—</td><td>Agent finishes / Agent 结束</td></tr>
+            <tr><td><code>PreCompact</code></td><td>—</td><td>Before compaction / 压缩前</td></tr>
+            <tr><td><code>PostCompact</code></td><td>—</td><td>After compaction / 压缩后</td></tr>
+            <tr><td><code>Notification</code></td><td>type</td><td>System notification / 系统通知</td></tr>
+            <tr><td><code>PermissionRequest</code></td><td>tool_name</td><td>Permission dialog / 权限弹窗</td></tr>
+            <tr><td><code>PermissionDenied</code></td><td>tool_name</td><td>Auto-denied / 自动拒绝</td></tr>
+            <tr><td><code>Setup</code></td><td>trigger</td><td>Initialization / 初始化</td></tr>
+            <tr><td><code>TeammateIdle</code></td><td>—</td><td>Teammate going idle / 队友空闲</td></tr>
+            <tr><td><code>TaskCreated</code></td><td>—</td><td>Task created / 任务创建</td></tr>
+            <tr><td><code>TaskCompleted</code></td><td>—</td><td>Task completed / 任务完成</td></tr>
+            <tr><td><code>Elicitation</code></td><td>—</td><td>MCP requests input / MCP 请求输入</td></tr>
+            <tr><td><code>ElicitationResult</code></td><td>—</td><td>User responds / 用户响应</td></tr>
+            <tr><td><code>ConfigChange</code></td><td>source</td><td>Config modified / 配置变更</td></tr>
+            <tr><td><code>InstructionsLoaded</code></td><td>—</td><td>CLAUDE.md loaded / 加载规则</td></tr>
+            <tr><td><code>WorktreeCreate</code></td><td>—</td><td>Worktree created / Worktree 创建</td></tr>
+            <tr><td><code>WorktreeRemove</code></td><td>—</td><td>Worktree removed / Worktree 移除</td></tr>
+            <tr><td><code>CwdChanged</code></td><td>—</td><td>Directory changed / 切换目录</td></tr>
+            <tr><td><code>FileChanged</code></td><td>filename</td><td>File modified / 文件变更</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <h3>Configuration Example / 配置示例</h3>
+  <pre data-lang="json">{
+  <span class="prop">"hooks"</span>: {
+    <span class="prop">"PreToolUse"</span>: [
+      {
+        <span class="prop">"matcher"</span>: <span class="str">"Bash"</span>,
+        <span class="prop">"hooks"</span>: [
+          {
+            <span class="prop">"type"</span>: <span class="str">"command"</span>,
+            <span class="prop">"command"</span>: <span class="str">"echo '$ARGUMENTS' | jq -e '.tool_input | test(\"rm -rf\") | not' || (echo 'Blocked' &gt;&amp;2; exit 2)"</span>,
+            <span class="prop">"if"</span>: <span class="str">"Bash(*)"</span>
+          }
+        ]
+      }
+    ]
+  }
+}</pre>
+
+  <h3>Advanced Patterns / 高级模式</h3>
+  <div class="card-grid">
+    <div class="card"><div class="card-header"><span class="card-icon">⏳</span><span class="card-title">Async Background</span></div><div class="card-body"><code>"async": true</code> — runs without blocking. / 后台执行不阻塞。</div></div>
+    <div class="card"><div class="card-header"><span class="card-icon">🔄</span><span class="card-title">Async + Rewake</span></div><div class="card-body"><code>"asyncRewake": true</code> — wakes model on exit code 2. / 失败时唤醒模型。</div></div>
+    <div class="card"><div class="card-header"><span class="card-icon">1️⃣</span><span class="card-title">One-time</span></div><div class="card-body"><code>"once": true</code> — runs once, then auto-removed. / 只跑一次自动移除。</div></div>
+    <div class="card"><div class="card-header"><span class="card-icon">🎯</span><span class="card-title">Conditional</span></div><div class="card-body"><code>"if": "Bash(git *)"</code> — only for matching tool calls. / 只对匹配的调用执行。</div></div>
+  </div>
+</div>
+
+<div class="glow-line"></div>
+
+<!-- ═══════════ 5. MCP ═══════════ -->
+<div class="section" id="mcp">
+  <div class="section-header">
+    <span class="section-num">05</span>
+    <span class="section-title">MCP Server Integration</span>
+    <span class="section-title-zh">MCP 集成</span>
+  </div>
+
+  <p>MCP (Model Context Protocol) servers extend Claude Code with custom tools and resources.</p>
+  <p class="bilingual">MCP 服务器为 Claude Code 扩展自定义工具和资源。</p>
+
+  <h3>Configuration / 配置</h3>
+  <pre data-lang="json"><span class="cm">// ~/.claude/settings.json, .claude/settings.json, or .mcp.json</span>
+{
+  <span class="prop">"mcpServers"</span>: {
+    <span class="prop">"my-server"</span>: {
+      <span class="prop">"type"</span>: <span class="str">"stdio"</span>,
+      <span class="prop">"command"</span>: <span class="str">"npx"</span>,
+      <span class="prop">"args"</span>: [<span class="str">"my-mcp-server"</span>],
+      <span class="prop">"env"</span>: { <span class="prop">"API_KEY"</span>: <span class="str">"xxx"</span> }
+    },
+    <span class="prop">"remote-api"</span>: {
+      <span class="prop">"type"</span>: <span class="str">"sse"</span>,
+      <span class="prop">"url"</span>: <span class="str">"https://api.example.com/mcp"</span>,
+      <span class="prop">"headers"</span>: { <span class="prop">"Authorization"</span>: <span class="str">"Bearer token"</span> }
+    }
+  }
+}</pre>
+
+  <h3>Transport Types / 传输类型</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Type / 类型</th><th>Use Case / 场景</th><th>Notes / 特点</th></tr></thead>
+      <tbody>
+        <tr><td><code>stdio</code></td><td>Local tools / 本地工具</td><td>Subprocess. Most stable / 最稳定</td></tr>
+        <tr><td><code>sse</code></td><td>Cloud APIs / 云端</td><td>Auto-reconnect / 自动重连</td></tr>
+        <tr><td><code>http</code></td><td>Sync APIs / 同步</td><td>~30s timeout</td></tr>
+        <tr><td><code>ws</code></td><td>Real-time / 实时</td><td>Requires TLS</td></tr>
+        <tr><td><code>sdk</code></td><td>IDE extensions</td><td>VS Code / JetBrains only</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>Config Priority / 配置优先级</h3>
+  <div class="flow">
+    <div class="flow-box" style="border-color:var(--accent)">.mcp.json<br><small>project local / 项目本地</small></div>
+    <span class="flow-arrow">→</span>
+    <div class="flow-box">~/.claude/settings.json<br><small>user / 用户</small></div>
+    <span class="flow-arrow">→</span>
+    <div class="flow-box">.claude/settings.json<br><small>project shared / 项目共享</small></div>
+    <span class="flow-arrow">→</span>
+    <div class="flow-box" style="opacity:.6">Enterprise policy<br><small>企业策略</small></div>
+  </div>
+
+  <h3>Tool Naming / 工具命名</h3>
+  <p>MCP tools appear as: <code>mcp__&lt;server_name&gt;__&lt;tool_name&gt;</code>. Special characters are replaced with <code>_</code>.</p>
+  <p class="bilingual">MCP 工具命名格式：<code>mcp__&lt;服务名&gt;__&lt;工具名&gt;</code>。特殊字符替换为 <code>_</code>。</p>
+
+  <h3>Building MCP Servers — Tips / 开发建议</h3>
+  <div class="card-grid">
+    <div class="card"><div class="card-body">&bull; Keep tool descriptions concise — model uses them to decide when to call / 工具描述要简洁</div></div>
+    <div class="card"><div class="card-body">&bull; Return results <code>&lt;100KB</code> — larger gets truncated / 返回 &lt;100KB</div></div>
+    <div class="card"><div class="card-body">&bull; Use env vars for secrets — supports <code>$ENV_VAR</code> expansion / 用环境变量传密钥</div></div>
+    <div class="card"><div class="card-body">&bull; Implement <code>ToolListChanged</code> notification for dynamic tools / 支持动态工具通知</div></div>
+  </div>
+
+  <h3>Connection Management / 连接管理</h3>
+  <p>Exponential backoff: 1s initial → 30s max → 5 attempts max. Local servers: 2-4 concurrent. Remote: ~20 concurrent. OAuth 401 cached for 15 min.</p>
+  <p class="bilingual">指数退避重连：初始 1s → 最大 30s → 最多 5 次。本地并发 2-4，远程约 20。OAuth 401 缓存 15 分钟。</p>
+</div>
+
+<div class="glow-line"></div>
+
+<!-- ═══════════ 6. AGENTS ═══════════ -->
+<div class="section" id="agents">
+  <div class="section-header">
+    <span class="section-num">06</span>
+    <span class="section-title">Agent / Subagent System</span>
+    <span class="section-title-zh">Agent 系统</span>
+  </div>
+
+  <p>Claude Code's agent system supports parallel execution, worktree isolation, custom definitions, and multi-agent teams.</p>
+  <p class="bilingual">Agent 系统支持并行执行、worktree 隔离、自定义定义和多 Agent 团队。</p>
+
+  <h3>Built-in Agent Types / 内置 Agent 类型</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Type / 类型</th><th>Use / 用途</th><th>Tools / 工具权限</th></tr></thead>
+      <tbody>
+        <tr><td><span class="tag tag-orange">general-purpose</span></td><td>Multi-step tasks / 通用多步任务</td><td>All tools / 全部</td></tr>
+        <tr><td><span class="tag tag-blue">Explore</span></td><td>Codebase exploration / 代码探索</td><td>Read-only / 只读</td></tr>
+        <tr><td><span class="tag tag-green">Plan</span></td><td>Architecture design / 架构设计</td><td>Read-only / 只读</td></tr>
+        <tr><td><span class="tag tag-purple">verification</span></td><td>Test and verify / 测试验证</td><td>All tools / 全部</td></tr>
+        <tr><td><span class="tag tag-cyan">claude-code-guide</span></td><td>Usage help / 使用帮助</td><td>Read + search / 读取+搜索</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>Execution Patterns / 执行模式</h3>
+  <div class="card-grid">
+    <div class="card"><div class="card-header"><span class="card-icon">▶️</span><span class="card-title">Synchronous (default)</span></div><div class="card-body">Blocks caller until done. Use when you need results before proceeding.<br>阻塞等待结果。需要结果才能继续时使用。</div></div>
+    <div class="card"><div class="card-header"><span class="card-icon">⏩</span><span class="card-title">Background</span></div><div class="card-body"><code>run_in_background: true</code>. Multiple in one message = true parallelism.<br>后台运行。一条消息多个 = 真并行。</div></div>
+    <div class="card"><div class="card-header"><span class="card-icon">🌲</span><span class="card-title">Worktree Isolation</span></div><div class="card-body"><code>isolation: "worktree"</code>. Isolated git copy. Auto-cleanup if no changes.<br>独立 git 副本。无改动自动清理。</div></div>
+    <div class="card"><div class="card-header"><span class="card-icon">🍴</span><span class="card-title">Fork Agent</span></div><div class="card-body">Omit <code>subagent_type</code>. Reuses parent's prompt cache — saves tokens.<br>省略 subagent_type。复用父级缓存，省 token。</div></div>
+  </div>
+
+  <h3>Custom Agent Definition / 自定义 Agent</h3>
+  <p>Place Markdown files in <code>.claude/agents/</code>:</p>
+  <pre data-lang="markdown"><span class="cm">---</span>
+<span class="prop">description</span>: <span class="str">"Run and fix tests"</span>
+<span class="prop">model</span>: <span class="str">sonnet</span>
+<span class="prop">tools</span>: [<span class="str">"Bash"</span>, <span class="str">"Read"</span>, <span class="str">"Edit"</span>, <span class="str">"Write"</span>]
+<span class="prop">maxTurns</span>: <span class="num">50</span>
+<span class="prop">isolation</span>: <span class="str">worktree</span>
+<span class="cm">---</span>
+
+You are a test-fixing specialist.
+你是一个测试修复专家。</pre>
+
+  <h3>Communication / 通信</h3>
+  <p>Agents communicate via <code>SendMessage</code>:</p>
+  <pre data-lang="js"><span class="fn">SendMessage</span>({ <span class="prop">to</span>: <span class="str">"agent-name"</span>, <span class="prop">message</span>: <span class="str">"Done!"</span> })
+<span class="fn">SendMessage</span>({ <span class="prop">to</span>: <span class="str">"*"</span>, <span class="prop">message</span>: <span class="str">"Broadcast"</span> }) <span class="cm">// all teammates</span></pre>
+</div>
+
+<div class="glow-line"></div>
+
+<!-- ═══════════ 7. HIDDEN FEATURES ═══════════ -->
+<div class="section" id="hidden">
+  <div class="section-header">
+    <span class="section-num">07</span>
+    <span class="section-title">Hidden Features</span>
+    <span class="section-title-zh">隐藏功能</span>
+  </div>
+
+  <p>Features gated behind compile-time flags, absent from public builds but visible in source.</p>
+  <p class="bilingual">编译时功能标志控制的功能，公开构建中不存在但在源码中可见。</p>
+
+  <div class="card-grid">
+    <div class="card">
+      <div class="card-header"><span class="card-icon">🐾</span><div><span class="card-title">BUDDY — Terminal Pet</span><br><span class="card-title-zh">终端电子宠物</span></div></div>
+      <div class="card-body">Tamagotchi-style companion. 18 species, 5 rarities (Common → Legendary), 1% shiny chance. Deterministic gacha seeded from userId. ASCII art sprites with idle animations. Gated: <code>BUDDY</code> flag.<br><br>电子宠物系统。18 物种、5 稀有度、1% 闪光率。基于 userId 的确定性抽卡。ASCII 动画精灵。</div>
+    </div>
+    <div class="card">
+      <div class="card-header"><span class="card-icon">👁️</span><div><span class="card-title">KAIROS — Always-On Claude</span><br><span class="card-title-zh">永不下线的 Claude</span></div></div>
+      <div class="card-body">Persistent assistant that watches, logs, and <strong>proactively</strong> acts. 15-second blocking budget. Exclusive tools: SendUserFile, PushNotification, SubscribePR. Gated: <code>PROACTIVE</code> / <code>KAIROS</code>.<br><br>持久运行的助手，观察、记录并主动行动。15 秒阻塞预算。</div>
+    </div>
+    <div class="card">
+      <div class="card-header"><span class="card-icon">🧠</span><div><span class="card-title">ULTRAPLAN — 30-Min Planning</span><br><span class="card-title-zh">30 分钟远程规划</span></div></div>
+      <div class="card-body">Offloads planning to remote Opus 4.6 CCR session. Up to 30 minutes. Browser UI for approval. Result "teleported" back via <code>__ULTRAPLAN_TELEPORT_LOCAL__</code>.<br><br>将规划卸载到远程 Opus 4.6 会话，最多 30 分钟，浏览器审批。</div>
+    </div>
+    <div class="card">
+      <div class="card-header"><span class="card-icon">💤</span><div><span class="card-title">Dream System — Memory Consolidation</span><br><span class="card-title-zh">梦境系统 — 记忆整合</span></div></div>
+      <div class="card-body">Background memory consolidation via forked subagent. Three-gate trigger: 24h since last + 5 sessions + lock acquired. Four phases: Orient → Gather → Consolidate → Prune. Read-only bash.<br><br>后台记忆整合。三道门触发：24 小时 + 5 次会话 + 获取锁。四阶段：定向→收集→整合→修剪。</div>
+    </div>
+    <div class="card">
+      <div class="card-header"><span class="card-icon">🐧</span><div><span class="card-title">Penguin Mode (Fast Mode)</span><br><span class="card-title-zh">企鹅模式（快速模式）</span></div></div>
+      <div class="card-body">Internal codename for Fast Mode. API: <code>/api/claude_code_penguin_mode</code>. Kill-switch: <code>tengu_penguins_off</code>.<br><br>Fast 模式的内部代号。API 端点直接叫企鹅模式。</div>
+    </div>
+    <div class="card">
+      <div class="card-header"><span class="card-icon">🕵️</span><div><span class="card-title">Undercover Mode</span><br><span class="card-title-zh">卧底模式</span></div></div>
+      <div class="card-body">Prevents AI from revealing it's an AI in public repos. Auto-active for <code>USER_TYPE === 'ant'</code>. No force-OFF. Confirms Anthropic employees use Claude Code in open-source.<br><br>防止 AI 在公共仓库暴露身份。Anthropic 员工自动启用，无法强制关闭。</div>
+    </div>
+  </div>
+
+  <h3>Feature Flags / 功能标志</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Flag</th><th>Feature / 功能</th></tr></thead>
+      <tbody>
+        <tr><td><code>PROACTIVE</code> / <code>KAIROS</code></td><td>Always-on assistant / 永不下线助手</td></tr>
+        <tr><td><code>BUDDY</code></td><td>Companion pet / 电子宠物</td></tr>
+        <tr><td><code>BRIDGE_MODE</code></td><td>Remote control via claude.ai / 远程控制</td></tr>
+        <tr><td><code>DAEMON</code></td><td>Background daemon / 后台守护进程</td></tr>
+        <tr><td><code>VOICE_MODE</code></td><td>Voice input / 语音输入</td></tr>
+        <tr><td><code>COORDINATOR_MODE</code></td><td>Multi-agent orchestration / 多 Agent 编排</td></tr>
+        <tr><td><code>TRANSCRIPT_CLASSIFIER</code></td><td>AFK auto-approval / 离开模式自动审批</td></tr>
+        <tr><td><code>WORKFLOW_SCRIPTS</code></td><td>Workflow automation / 工作流自动化</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="glow-line"></div>
+
+<!-- ═══════════ 8. TOOLS ═══════════ -->
+<div class="section" id="tools">
+  <div class="section-header">
+    <span class="section-num">08</span>
+    <span class="section-title">Tool Registry</span>
+    <span class="section-title-zh">工具注册表</span>
+  </div>
+
+  <p>40+ tools registered in <code>tools/</code>, filtered by feature gates, user type, and permissions.</p>
+  <p class="bilingual">40+ 工具在 <code>tools/</code> 中注册，按功能标志、用户类型和权限过滤。</p>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Tool</th><th>Description / 描述</th><th>Category</th></tr></thead>
+      <tbody>
+        <tr><td><code>AgentTool</code></td><td>Spawn child agents / 生成子 Agent</td><td><span class="tag tag-orange">agent</span></td></tr>
+        <tr><td><code>BashTool</code></td><td>Shell execution / Shell 执行</td><td><span class="tag tag-green">exec</span></td></tr>
+        <tr><td><code>PowerShellTool</code></td><td>Windows shell / Windows 终端</td><td><span class="tag tag-green">exec</span></td></tr>
+        <tr><td><code>FileReadTool</code></td><td>Read files / 读文件</td><td><span class="tag tag-blue">file</span></td></tr>
+        <tr><td><code>FileEditTool</code></td><td>Edit files (diff) / 编辑文件</td><td><span class="tag tag-blue">file</span></td></tr>
+        <tr><td><code>FileWriteTool</code></td><td>Write files / 写文件</td><td><span class="tag tag-blue">file</span></td></tr>
+        <tr><td><code>GlobTool</code></td><td>Pattern-based file search / 模式文件搜索</td><td><span class="tag tag-cyan">search</span></td></tr>
+        <tr><td><code>GrepTool</code></td><td>Content search (ripgrep) / 内容搜索</td><td><span class="tag tag-cyan">search</span></td></tr>
+        <tr><td><code>WebFetchTool</code></td><td>Fetch URLs / 获取 URL</td><td><span class="tag tag-purple">web</span></td></tr>
+        <tr><td><code>WebSearchTool</code></td><td>Web search / 网络搜索</td><td><span class="tag tag-purple">web</span></td></tr>
+        <tr><td><code>NotebookEditTool</code></td><td>Jupyter notebooks / Jupyter 编辑</td><td><span class="tag tag-blue">file</span></td></tr>
+        <tr><td><code>SkillTool</code></td><td>Invoke skills / 调用技能</td><td><span class="tag tag-orange">agent</span></td></tr>
+        <tr><td><code>LSPTool</code></td><td>Language Server Protocol</td><td><span class="tag tag-cyan">search</span></td></tr>
+        <tr><td><code>MCPTool</code></td><td>MCP server tools / MCP 工具</td><td><span class="tag tag-purple">web</span></td></tr>
+        <tr><td><code>SendMessageTool</code></td><td>Agent communication / Agent 通信</td><td><span class="tag tag-orange">agent</span></td></tr>
+        <tr><td><code>TaskCreate/Get/List/Update/Output/Stop</code></td><td>Background tasks / 后台任务</td><td><span class="tag tag-orange">agent</span></td></tr>
+        <tr><td><code>TeamCreate/DeleteTool</code></td><td>Agent teams / Agent 团队</td><td><span class="tag tag-orange">agent</span></td></tr>
+        <tr><td><code>EnterWorktreeTool</code></td><td>Git worktree isolation / Worktree 隔离</td><td><span class="tag tag-green">exec</span></td></tr>
+        <tr><td><code>ScheduleCronTool</code></td><td>Cron scheduling / 定时任务</td><td><span class="tag tag-green">exec</span></td></tr>
+        <tr><td><code>RemoteTriggerTool</code></td><td>Remote agent triggers / 远程触发</td><td><span class="tag tag-orange">agent</span></td></tr>
+        <tr><td><code>ToolSearchTool</code></td><td>Discover deferred tools / 搜索延迟工具</td><td><span class="tag tag-cyan">search</span></td></tr>
+        <tr><td><code>AskUserQuestionTool</code></td><td>Prompt user / 请求用户输入</td><td><span class="tag tag-blue">file</span></td></tr>
+        <tr><td><code>BriefTool</code></td><td>Upload/summarize / 上传总结</td><td><span class="tag tag-blue">file</span></td></tr>
+        <tr><td><code>ConfigTool</code></td><td>Settings <span class="tag tag-red">internal</span></td><td><span class="tag tag-green">exec</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="glow-line"></div>
+
+<!-- ═══════════ 9. SECURITY ═══════════ -->
+<div class="section" id="security">
+  <div class="section-header">
+    <span class="section-num">09</span>
+    <span class="section-title">Security & Permissions</span>
+    <span class="section-title-zh">安全与权限</span>
+  </div>
+
+  <p>A multi-layered permission system in <code>tools/permissions/</code> with ML-based auto-approval and risk classification.</p>
+  <p class="bilingual">在 <code>tools/permissions/</code> 中的多层权限系统，包含基于 ML 的自动审批和风险分类。</p>
+
+  <h3>Permission Modes / 权限模式</h3>
+  <div class="card-grid">
+    <div class="card"><div class="card-header"><span class="tag tag-green">default</span></div><div class="card-body">Interactive prompts for unlisted tools. Standard mode.<br>未列出工具需交互确认。标准模式。</div></div>
+    <div class="card"><div class="card-header"><span class="tag tag-blue">auto</span></div><div class="card-body">ML-based auto-approval via transcript classifier.<br>基于 ML 的自动审批。</div></div>
+    <div class="card"><div class="card-header"><span class="tag tag-purple">plan</span></div><div class="card-body">Requires approval before any implementation.<br>实施前需要批准。</div></div>
+    <div class="card"><div class="card-header"><span class="tag tag-red">bypass</span></div><div class="card-body">Skip all permission checks. Use with caution.<br>跳过所有权限检查。谨慎使用。</div></div>
+  </div>
+
+  <h3>Risk Classification / 风险分类</h3>
+  <p>Every tool action classified as:</p>
+  <div class="flow">
+    <div class="flow-box" style="border-color:var(--green)"><span style="color:var(--green)">LOW</span><br><small>Read operations / 读操作</small></div>
+    <span class="flow-arrow">→</span>
+    <div class="flow-box" style="border-color:var(--yellow)"><span style="color:var(--yellow)">MEDIUM</span><br><small>Write operations / 写操作</small></div>
+    <span class="flow-arrow">→</span>
+    <div class="flow-box" style="border-color:var(--red)"><span style="color:var(--red)">HIGH</span><br><small>Destructive / shell / 破坏性操作</small></div>
+  </div>
+
+  <h3>Protected Files / 保护文件</h3>
+  <p>These files are guarded from automatic editing / 以下文件受保护不被自动编辑:</p>
+  <p><code>.gitconfig</code> &bull; <code>.bashrc</code> &bull; <code>.zshrc</code> &bull; <code>.mcp.json</code> &bull; <code>.claude.json</code> &bull; <code>settings.json</code></p>
+
+  <h3>Security Features / 安全功能</h3>
+  <div class="card-grid">
+    <div class="card"><div class="card-body"><strong>Path Traversal Prevention</strong> — URL-encoded traversals, Unicode normalization, backslash injection all handled.<br>路径遍历防护——URL 编码、Unicode 规范化、反斜杠注入全部处理。</div></div>
+    <div class="card"><div class="card-body"><strong>Permission Explainer</strong> — A separate LLM call explains tool risks before user approves.<br>权限解释器——单独的 LLM 调用在用户审批前解释风险。</div></div>
+    <div class="card"><div class="card-body"><strong>SSRF Protection</strong> — HTTP hooks validate resolved IPs, respect proxy settings.<br>SSRF 防护——HTTP hook 验证解析后的 IP。</div></div>
+    <div class="card"><div class="card-body"><strong>Cyber Risk Instruction</strong> — Owned by Safeguards team. Defines authorized vs unauthorized security testing.<br>网络安全风险指令——安全防护团队所有。定义授权与未授权安全测试。</div></div>
+  </div>
+</div>
+
+<div class="glow-line"></div>
+
+<div style="text-align:center;padding:40px 0;color:var(--text-muted);font-family:var(--font-mono);font-size:.75rem">
+  Built from source analysis of Claude Code &bull; <a href="https://github.com/yingwang/claude-code" style="color:var(--accent);text-decoration:none">yingwang/claude-code</a><br>
+  基于 Claude Code 源码分析构建
+</div>
+
+</div><!-- /content -->
+</div><!-- /main -->
+
+<script>
+// ═══════════ DIRECTORY TREE DATA ═══════════
+const dirs = [
+  {name:'assistant/', icon:'👁️', desc:'KAIROS always-on assistant mode / 永不下线助手模式', children:[
+    {name:'sessionHistory.ts', desc:'Session history management / 会话历史管理'}
+  ]},
+  {name:'bootstrap/', icon:'🚀', desc:'App state initialization / 应用状态初始化'},
+  {name:'bridge/', icon:'🌉', desc:'JWT-authenticated bridge to claude.ai / claude.ai 桥接系统', children:[
+    {name:'bridgeApi.ts', desc:'Bridge API client'},
+    {name:'bridgeConfig.ts', desc:'Bridge configuration'},
+    {name:'bridgeMessaging.ts', desc:'Message protocol'},
+  ]},
+  {name:'buddy/', icon:'🐾', desc:'Tamagotchi companion pet system / 电子宠物系统', children:[
+    {name:'companion.ts', desc:'Core companion logic, gacha system / 核心逻辑和抽卡'},
+    {name:'sprites.ts', desc:'ASCII art sprites / ASCII 精灵'},
+    {name:'prompt.ts', desc:'Buddy personality prompt / 宠物个性提示词'},
+    {name:'types.ts', desc:'Species, rarity types / 物种和稀有度类型'},
+  ]},
+  {name:'cli/', icon:'💻', desc:'CLI handlers, output, update check / CLI 处理、输出、更新'},
+  {name:'commands/', icon:'⌨️', desc:'100+ slash commands / 100+ 斜杠命令', children:[
+    {name:'agents/', desc:'Agent management commands'},
+    {name:'branch/', desc:'Branch management'},
+    {name:'advisor.ts', desc:'Advisor command'},
+  ]},
+  {name:'components/', icon:'🧩', desc:'React terminal UI components / React 终端 UI 组件', children:[
+    {name:'App.tsx', desc:'Root application component'},
+    {name:'AgentProgressLine.tsx', desc:'Agent progress display'},
+    {name:'MCPServerApprovalDialog.tsx', desc:'MCP server approval UI'},
+  ]},
+  {name:'constants/', icon:'📋', desc:'System prompt sections, API limits, betas / 系统提示词、限制、Beta', children:[
+    {name:'prompts.ts', desc:'All system prompt section generators / 全部提示词段落'},
+    {name:'betas.ts', desc:'Beta feature headers / Beta 功能头'},
+    {name:'apiLimits.ts', desc:'Image, PDF, media size caps / 大小限制'},
+    {name:'cyberRiskInstruction.ts', desc:'Security boundary rules / 安全边界规则'},
+  ]},
+  {name:'context/', icon:'🔗', desc:'React contexts (mailbox, modals, FPS) / React 上下文'},
+  {name:'coordinator/', icon:'🎯', desc:'Multi-agent coordinator mode / 多 Agent 编排模式', children:[
+    {name:'coordinatorMode.ts', desc:'Coordinator system prompt and logic / 编排器提示词和逻辑'},
+  ]},
+  {name:'entrypoints/', icon:'🚪', desc:'CLI, SDK, MCP entry points / CLI、SDK、MCP 入口'},
+  {name:'hooks/', icon:'🪝', desc:'React hooks (suggestions, permissions, rendering) / React hooks'},
+  {name:'ink/', icon:'🎨', desc:'Custom terminal renderer (React) / 自定义终端渲染器'},
+  {name:'keybindings/', icon:'⌨️', desc:'Keyboard shortcut system / 键盘快捷键系统'},
+  {name:'memdir/', icon:'🧠', desc:'Memory file system (MEMORY.md) / 记忆文件系统'},
+  {name:'migrations/', icon:'📦', desc:'Model codename migrations / 模型代号迁移', children:[
+    {name:'migrateFennecToOpus.ts', desc:'"Fennec" → Opus'},
+    {name:'migrateSonnet45ToSonnet46.ts', desc:'Sonnet 4.5 → 4.6'},
+  ]},
+  {name:'plugins/', icon:'🔌', desc:'Plugin system and bundled plugins / 插件系统'},
+  {name:'query/', icon:'🔍', desc:'API query config, token budgets / API 查询配置'},
+  {name:'remote/', icon:'🌐', desc:'Remote session management / 远程会话管理'},
+  {name:'schemas/', icon:'📐', desc:'Zod schemas for hooks / Hook 的 Zod 模式'},
+  {name:'screens/', icon:'📺', desc:'REPL, Doctor, Resume screens / 屏幕视图'},
+  {name:'server/', icon:'🖥️', desc:'Direct connect server / 直连服务器'},
+  {name:'services/', icon:'⚙️', desc:'Core services (MCP, analytics, OAuth, dream) / 核心服务', children:[
+    {name:'mcp/', desc:'MCP client, connection management / MCP 客户端'},
+    {name:'autoDream/', desc:'Background memory consolidation / 后台记忆整合'},
+    {name:'api/', desc:'API client and retry logic / API 客户端'},
+    {name:'oauth/', desc:'OAuth flow / OAuth 流程'},
+    {name:'analytics/', desc:'Usage analytics / 使用分析'},
+  ]},
+  {name:'skills/', icon:'🎓', desc:'Skill loading and execution / 技能加载和执行'},
+  {name:'state/', icon:'📊', desc:'AppState store (React state) / 应用状态存储'},
+  {name:'tasks/', icon:'📋', desc:'Agent task execution (Local, Remote, InProcess) / Agent 任务执行', children:[
+    {name:'LocalAgentTask/', desc:'Local sync/async agent execution / 本地同步/异步 Agent'},
+    {name:'RemoteAgentTask/', desc:'Remote CCR agent execution / 远程 CCR Agent'},
+    {name:'InProcessTeammateTask/', desc:'In-process teammate (AsyncLocalStorage) / 进程内队友'},
+    {name:'DreamTask/', desc:'Memory consolidation task / 记忆整合任务'},
+  ]},
+  {name:'tools/', icon:'🛠️', desc:'40+ tool implementations / 40+ 工具实现', children:[
+    {name:'AgentTool/', desc:'Agent spawning, definitions, memory / Agent 生成'},
+    {name:'BashTool/', desc:'Shell execution with sandboxing / Shell 执行'},
+    {name:'FileReadTool/', desc:'File reading / 文件读取'},
+    {name:'FileEditTool/', desc:'Diff-based file editing / 差异编辑'},
+    {name:'FileWriteTool/', desc:'File creation / 文件创建'},
+    {name:'GlobTool/', desc:'Pattern file search / 模式搜索'},
+    {name:'GrepTool/', desc:'Content search (ripgrep) / 内容搜索'},
+    {name:'MCPTool/', desc:'MCP server tool proxy / MCP 工具代理'},
+    {name:'WebFetchTool/', desc:'URL fetching / 获取 URL'},
+    {name:'WebSearchTool/', desc:'Web search / 网络搜索'},
+  ]},
+  {name:'types/', icon:'📝', desc:'TypeScript type definitions / 类型定义'},
+  {name:'upstreamproxy/', icon:'🔒', desc:'Container-aware proxy with ptrace protection / 容器代理'},
+  {name:'utils/', icon:'🔧', desc:'330+ utility modules / 330+ 工具模块', children:[
+    {name:'permissions/', desc:'Permission system / 权限系统'},
+    {name:'hooks/', desc:'Hook execution engine / Hook 执行引擎'},
+    {name:'worktree.ts', desc:'Git worktree management / Worktree 管理'},
+    {name:'undercover.ts', desc:'Undercover mode / 卧底模式'},
+    {name:'fastMode.ts', desc:'Penguin mode / 企鹅模式'},
+  ]},
+  {name:'vim/', icon:'📗', desc:'Vim keybinding engine / Vim 键绑定引擎'},
+  {name:'voice/', icon:'🎤', desc:'Voice input mode / 语音输入模式'},
+];
+
+// ═══════════ RENDER TREE ═══════════
+function renderTree(items, container) {
+  items.forEach(item => {
+    const el = document.createElement('div');
+    el.innerHTML = `
+      <div class="tree-item" onclick="this.classList.toggle('open')">
+        <span class="tree-icon">${item.icon || '📄'}</span>
+        <div>
+          <div class="tree-name">${item.name}</div>
+          <div class="tree-desc">${item.desc}</div>
+        </div>
+      </div>
+    `;
+    container.appendChild(el.firstElementChild);
+    if (item.children) {
+      const childContainer = document.createElement('div');
+      childContainer.className = 'tree-children';
+      item.children.forEach(child => {
+        const cel = document.createElement('div');
+        cel.innerHTML = `
+          <div class="tree-item">
+            <span class="tree-icon" style="color:var(--text-muted)">└</span>
+            <div>
+              <div class="tree-name" style="font-weight:400;color:var(--text)">${child.name}</div>
+              <div class="tree-desc">${child.desc}</div>
+            </div>
+          </div>
+        `;
+        childContainer.appendChild(cel.firstElementChild);
+      });
+      container.appendChild(childContainer);
+    }
+  });
+}
+renderTree(dirs, document.getElementById('dir-tree'));
+
+// ═══════════ ACTIVE NAV ═══════════
+const navLinks = document.querySelectorAll('.sidebar-nav a');
+const sections = document.querySelectorAll('.section');
+
+function updateActiveNav() {
+  let current = '';
+  sections.forEach(s => {
+    if (s.getBoundingClientRect().top <= 100) current = s.id;
+  });
+  navLinks.forEach(a => {
+    a.classList.toggle('active', a.getAttribute('data-section') === current);
+  });
+}
+window.addEventListener('scroll', updateActiveNav, {passive: true});
+updateActiveNav();
+
+// Close sidebar on mobile after click
+navLinks.forEach(a => {
+  a.addEventListener('click', () => {
+    if (window.innerWidth <= 900) {
+      document.querySelector('.sidebar').classList.remove('open');
+    }
+  });
+});
+</script>
+
+</body>
+</html>
